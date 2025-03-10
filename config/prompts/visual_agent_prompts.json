@@ -1,0 +1,20 @@
+{
+  "generate_video": {
+    "description": "生成视频的提示词模板",
+    "template": "{{content}}\n{{visual_description}}",
+    "parameters": {
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "style_strength": 0.8
+    }
+  },
+  "regenerate_video": {
+    "description": "重新生成视频的提示词模板",
+    "template": "重新生成: {{content}}\n详细的视觉描述: {{visual_description}}\n调整要求: {{adjustment}}",
+    "parameters": {
+      "temperature": 0.8,
+      "top_p": 0.95,
+      "style_strength": 0.9
+    }
+  }
+}

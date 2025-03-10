@@ -1,0 +1,14 @@
+{
+  "create_script": {
+    "description": "生成TikTok短视频脚本模板",
+    "template": "你是一位专业的TikTok短视频脚本编剧。请为以下主题创建一个引人入胜的短视频脚本：\n\n主题：{{theme}}\n风格：{{style}}\n类型：{{script_type}}\n目标受众：{{target_audience}}\n总时长：{{duration}}秒\n语言：{{language}}\n关键词：{{keywords}}\n特殊要求：{{special_requirements}}\n\n请创建一个包含{{num_sections}}个场景的脚本，每个场景应包含：\n1. 场景内容（对白或旁白）\n2. 视觉描述\n3. 音频描述\n4. 场景时长（秒）\n5. 相关标签\n\n请以JSON格式返回，包含标题和场景列表."
+  },
+  "modify_script": {
+    "description": "根据用户反馈修改TikTok短视频脚本模板",
+    "template": "这是一个TikTok短视频脚本：\n\n{{script_json}}\n\n用户提供了以下反馈：\n\n{{feedback}}\n\n请根据用户反馈修改脚本，保持JSON格式不变，但更新内容以满足用户需求。"
+  },
+  "system_role": {
+    "create_script": "你是一位专业的TikTok短视频脚本编剧，擅长创作引人入胜、节奏紧凑的短视频内容。",
+    "modify_script": "你是一位专业的TikTok短视频脚本编剧，擅长根据反馈修改脚本。"
+  }
+}
