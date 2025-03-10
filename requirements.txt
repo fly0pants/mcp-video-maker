@@ -20,4 +20,6 @@ pillow==10.1.0
 numpy==1.26.1
 python-jose==3.3.0
 passlib==1.7.4
-pydub==0.25.1 
+pydub==0.25.1
+aiofiles==23.2.1
+tenacity==8.2.3 

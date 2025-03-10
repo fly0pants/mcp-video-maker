@@ -116,6 +116,11 @@ class MCPError(BaseModel):
     details: Optional[Dict[str, Any]] = Field(None, description="错误详情")
     retry_possible: bool = Field(default=False, description="是否可以重试")
     suggested_action: Optional[str] = Field(None, description="建议的操作")
+    category: str = Field(default="UNKNOWN", description="错误类别：TEMPORARY或PERMANENT")
+    max_retries: Optional[int] = Field(None, description="最大重试次数建议")
+    retry_delay_ms: Optional[int] = Field(None, description="建议的重试延迟(毫秒)")
+    recovery_strategy: Optional[str] = Field(None, description="建议的恢复策略")
+    error_severity: str = Field(default="ERROR", description="错误严重性：INFO, WARNING, ERROR, CRITICAL")
 
 
 class MCPStateUpdate(BaseModel):

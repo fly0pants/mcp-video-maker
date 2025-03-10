@@ -2,6 +2,7 @@ import asyncio
 import uuid
 import logging
 import time
+import random
 from typing import Dict, List, Any, Optional, Callable, Awaitable, Set
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -12,6 +13,7 @@ from models.mcp import (
     create_command_message, create_event_message, create_heartbeat_message
 )
 from utils.mcp_message_bus import mcp_message_bus
+from utils.workflow_state_machine import workflow_manager, Workflow, WorkflowState
 
 
 class MCPBaseAgent(ABC):
@@ -49,6 +51,12 @@ class MCPBaseAgent(ABC):
         
         # 消息回调是否已注册
         self._callback_registered = False
+        
+        # 断路器状态
+        self._circuit_breakers: Dict[str, Dict[str, Any]] = {}
+        
+        # 工作流管理
+        self._active_workflows: Dict[str, Workflow] = {}
         
         # 注册消息处理器
         self._register_handlers()
@@ -253,7 +261,8 @@ class MCPBaseAgent(ABC):
         priority: MCPPriority = MCPPriority.NORMAL,
         timeout_seconds: Optional[int] = 60,
         wait_for_response: bool = True,
-        response_timeout: float = 30.0
+        response_timeout: float = 30.0,
+        retry_config: Optional[Dict[str, Any]] = None
     ) -> Optional[MCPMessage]:
         """
         发送命令消息给目标代理
@@ -267,31 +276,168 @@ class MCPBaseAgent(ABC):
             timeout_seconds: 命令执行超时时间
             wait_for_response: 是否等待响应
             response_timeout: 等待响应的超时时间
+            retry_config: 重试配置，包含以下可选参数:
+                max_retries: 最大重试次数
+                base_delay_ms: 初始延迟(毫秒)
+                max_delay_ms: 最大延迟(毫秒)
+                jitter: 随机抖动比例(0-1)
             
         Returns:
             如果wait_for_response为True，返回响应消息；否则返回None
         """
-        # 创建命令消息
-        command_msg = create_command_message(
-            source=self.agent_id,
-            target=target,
+        # 设置默认重试配置
+        default_retry_config = {
+            "max_retries": 3,
+            "base_delay_ms": 200,
+            "max_delay_ms": 10000,
+            "jitter": 0.1
+        }
+        
+        # 合并用户配置
+        if retry_config:
+            retry_settings = {**default_retry_config, **retry_config}
+        else:
+            retry_settings = default_retry_config
+            
+        # 生成幂等性键，确保重试时命令只被执行一次
+        idempotency_key = f"{self.agent_id}_{target}_{action}_{uuid.uuid4().hex[:8]}"
+        
+        # 创建包含幂等性键的命令
+        command = MCPCommand(
             action=action,
             parameters=parameters,
-            session_id=session_id,
-            priority=priority,
-            timeout_seconds=timeout_seconds
+            timeout_seconds=timeout_seconds,
+            idempotency_key=idempotency_key
         )
         
-        # 发布消息
-        message_id = await mcp_message_bus.publish(command_msg)
+        # 创建命令消息
+        command_msg = MCPMessage(
+            header=MCPHeader(
+                source=self.agent_id,
+                target=target,
+                message_type=MCPMessageType.COMMAND,
+                session_id=session_id,
+                priority=priority
+            ),
+            body=command
+        )
         
-        # 等待响应
-        if wait_for_response:
-            return await mcp_message_bus.wait_for_response(
-                message_id=message_id,
-                timeout=response_timeout,
-                expected_source=target
+        # 重试逻辑
+        attempts = 0
+        last_error = None
+        
+        while attempts <= retry_settings["max_retries"]:
+            try:
+                # 发布消息
+                message_id = await mcp_message_bus.publish(command_msg)
+                
+                # 等待响应
+                if wait_for_response:
+                    response = await mcp_message_bus.wait_for_response(
+                        message_id=message_id,
+                        timeout=response_timeout,
+                        expected_source=target
+                    )
+                    
+                    # 检查响应，如果是错误且可重试，则进行重试
+                    if response and response.header.message_type == MCPMessageType.ERROR:
+                        error_body = response.body
+                        if isinstance(error_body, MCPError) and error_body.retry_possible and error_body.category == "TEMPORARY":
+                            # 保存错误信息
+                            last_error = error_body
+                            
+                            # 使用错误消息中建议的重试策略，如果有的话
+                            if error_body.max_retries is not None:
+                                retry_settings["max_retries"] = error_body.max_retries
+                            
+                            if error_body.retry_delay_ms is not None:
+                                delay_ms = error_body.retry_delay_ms
+                            else:
+                                # 计算指数退避延迟
+                                delay_ms = min(
+                                    retry_settings["base_delay_ms"] * (2 ** attempts),
+                                    retry_settings["max_delay_ms"]
+                                )
+                                
+                                # 添加随机抖动
+                                jitter_amount = delay_ms * retry_settings["jitter"]
+                                delay_ms += random.uniform(-jitter_amount, jitter_amount)
+                                
+                            # 等待延迟时间
+                            self.logger.info(f"Retrying command {action} after {delay_ms}ms (attempt {attempts+1}/{retry_settings['max_retries']})")
+                            await asyncio.sleep(delay_ms / 1000.0)  # 转换为秒
+                            
+                            # 增加尝试次数并继续循环
+                            attempts += 1
+                            continue
+                    
+                    # 返回响应（成功响应或不可重试的错误）
+                    return response
+                
+                # 如果不等待响应，则直接返回
+                return None
+                
+            except asyncio.TimeoutError:
+                self.logger.warning(f"Command {action} timed out after {response_timeout}s")
+                
+                # 判断是否继续重试
+                if attempts < retry_settings["max_retries"]:
+                    # 计算指数退避延迟
+                    delay_ms = min(
+                        retry_settings["base_delay_ms"] * (2 ** attempts),
+                        retry_settings["max_delay_ms"]
+                    )
+                    
+                    # 添加随机抖动
+                    jitter_amount = delay_ms * retry_settings["jitter"]
+                    delay_ms += random.uniform(-jitter_amount, jitter_amount)
+                    
+                    # 等待延迟时间
+                    self.logger.info(f"Retrying command {action} after {delay_ms}ms (attempt {attempts+1}/{retry_settings['max_retries']})")
+                    await asyncio.sleep(delay_ms / 1000.0)
+                else:
+                    # 超过最大重试次数，创建超时错误响应
+                    timeout_error = MCPError(
+                        error_code="COMMAND_TIMEOUT",
+                        error_message=f"Command {action} timed out after {attempts} attempts",
+                        retry_possible=False,
+                        category="PERMANENT"
+                    )
+                    
+                    # 创建错误响应消息
+                    error_response = MCPMessage(
+                        header=MCPHeader(
+                            source="system",
+                            target=self.agent_id,
+                            message_type=MCPMessageType.ERROR,
+                            correlation_id=command_msg.header.message_id
+                        ),
+                        body=timeout_error
+                    )
+                    
+                    return error_response
+            
+            # 增加尝试次数
+            attempts += 1
+        
+        # 如果所有重试都失败，返回最后的错误
+        if last_error:
+            error_response = MCPMessage(
+                header=MCPHeader(
+                    source="system",
+                    target=self.agent_id,
+                    message_type=MCPMessageType.ERROR,
+                    correlation_id=command_msg.header.message_id
+                ),
+                body=MCPError(
+                    error_code="MAX_RETRIES_EXCEEDED",
+                    error_message=f"Command {action} failed after {retry_settings['max_retries']} attempts",
+                    retry_possible=False,
+                    category="PERMANENT",
+                    details={"last_error": last_error.dict()}
+                )
             )
+            return error_response
         
         return None
     
@@ -517,4 +663,161 @@ class MCPBaseAgent(ABC):
         代理停止时的自定义逻辑
         """
         # 默认实现为空，子类可以覆盖
-        pass 
+        pass
+    
+    async def create_workflow(self, name: str, initial_state: str, initial_data: Optional[Dict[str, Any]] = None) -> Optional[str]:
+        """
+        创建并启动工作流
+        
+        Args:
+            name: 工作流名称
+            initial_state: 初始状态
+            initial_data: 初始数据
+            
+        Returns:
+            工作流ID，如果创建失败则返回None
+        """
+        # 创建工作流
+        workflow = workflow_manager.create_workflow(name, self.agent_id)
+        
+        # 添加工作流状态
+        self._setup_workflow_states(workflow)
+        
+        # 启动工作流
+        success = await workflow.start(initial_state, initial_data)
+        
+        if success:
+            # 添加到活动工作流列表
+            self._active_workflows[workflow.workflow_id] = workflow
+            self.logger.info(f"Started workflow {name} ({workflow.workflow_id}) in state {initial_state}")
+            return workflow.workflow_id
+        else:
+            self.logger.error(f"Failed to start workflow {name}")
+            return None
+    
+    def _setup_workflow_states(self, workflow: Workflow) -> None:
+        """
+        设置工作流状态
+        
+        Args:
+            workflow: 工作流实例
+        """
+        # 子类应该覆盖此方法，添加自定义状态
+        pass
+    
+    async def get_workflow(self, workflow_id: str) -> Optional[Dict[str, Any]]:
+        """
+        获取工作流信息
+        
+        Args:
+            workflow_id: 工作流ID
+            
+        Returns:
+            工作流信息，如果不存在则返回None
+        """
+        workflow = workflow_manager.get_workflow(workflow_id)
+        
+        if workflow and workflow.agent_id == self.agent_id:
+            return {
+                "workflow_id": workflow.workflow_id,
+                "name": workflow.name,
+                "current_state": workflow.current_state,
+                "status": workflow.data["status"],
+                "data": workflow.data
+            }
+        
+        return None
+    
+    async def list_workflows(self) -> List[Dict[str, Any]]:
+        """
+        列出代理的所有工作流
+        
+        Returns:
+            工作流信息列表
+        """
+        return workflow_manager.list_workflows(self.agent_id)
+    
+    async def transition_workflow(self, workflow_id: str, next_state: str, reason: str = "agent_transition") -> bool:
+        """
+        转换工作流状态
+        
+        Args:
+            workflow_id: 工作流ID
+            next_state: 下一个状态
+            reason: 转换原因
+            
+        Returns:
+            是否成功转换
+        """
+        workflow = workflow_manager.get_workflow(workflow_id)
+        
+        if workflow and workflow.agent_id == self.agent_id:
+            return await workflow.transition(next_state, reason)
+        
+        self.logger.error(f"Workflow {workflow_id} not found or not owned by this agent")
+        return False
+    
+    async def stop_workflow(self, workflow_id: str, reason: str = "agent_stop") -> bool:
+        """
+        停止工作流
+        
+        Args:
+            workflow_id: 工作流ID
+            reason: 停止原因
+            
+        Returns:
+            是否成功停止
+        """
+        workflow = workflow_manager.get_workflow(workflow_id)
+        
+        if workflow and workflow.agent_id == self.agent_id:
+            await workflow.stop(reason)
+            
+            # 从活动工作流列表中移除
+            if workflow_id in self._active_workflows:
+                del self._active_workflows[workflow_id]
+                
+            return True
+        
+        self.logger.error(f"Workflow {workflow_id} not found or not owned by this agent")
+        return False
+    
+    async def create_workflow_checkpoint(self, workflow_id: str, checkpoint_id: str, data: Optional[Dict[str, Any]] = None) -> bool:
+        """
+        创建工作流检查点
+        
+        Args:
+            workflow_id: 工作流ID
+            checkpoint_id: 检查点ID
+            data: 检查点数据
+            
+        Returns:
+            是否成功创建
+        """
+        workflow = workflow_manager.get_workflow(workflow_id)
+        
+        if workflow and workflow.agent_id == self.agent_id:
+            workflow.create_checkpoint(checkpoint_id, data)
+            return True
+        
+        self.logger.error(f"Workflow {workflow_id} not found or not owned by this agent")
+        return False
+    
+    async def restore_workflow_checkpoint(self, workflow_id: str, checkpoint_id: str) -> bool:
+        """
+        从检查点恢复工作流
+        
+        Args:
+            workflow_id: 工作流ID
+            checkpoint_id: 检查点ID
+            
+        Returns:
+            是否成功恢复
+        """
+        workflow = workflow_manager.get_workflow(workflow_id)
+        
+        if workflow and workflow.agent_id == self.agent_id:
+            return await workflow.restore_from_checkpoint(checkpoint_id)
+        
+        self.logger.error(f"Workflow {workflow_id} not found or not owned by this agent")
+        return False 
