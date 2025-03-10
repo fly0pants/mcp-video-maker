@@ -1,0 +1,29 @@
+# 基础依赖
+pydantic>=2.0.0
+fastapi>=0.100.0
+uvicorn>=0.22.0
+python-dotenv>=1.0.0
+email-validator>=2.0.0
+
+# 异步支持
+asyncio>=3.4.3
+aiohttp>=3.8.5
+
+# 工具库
+python-multipart>=0.0.6
+jinja2>=3.1.2
+pillow>=10.0.0
+numpy>=1.24.0
+
+# 日志和监控
+loguru>=0.7.0
+
+# 测试
+pytest>=7.3.1
+pytest-asyncio>=0.21.0
+httpx>=0.24.1
+
+# 开发工具
+black>=23.3.0
+isort>=5.12.0
+flake8>=6.0.0
