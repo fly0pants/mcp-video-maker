@@ -331,6 +331,84 @@ USER_CONFIG = {
     "theme": "light"
 }
 
+# 工作流配置
+WORKFLOW_CONFIG = {
+    "default_workflow": {
+        "steps": [
+            {
+                "name": "content_generation",
+                "type": "content",
+                "timeout": 300,
+                "retry_count": 3
+            },
+            {
+                "name": "video_generation",
+                "type": "video",
+                "timeout": 600,
+                "retry_count": 2
+            },
+            {
+                "name": "voice_synthesis",
+                "type": "voice",
+                "timeout": 300,
+                "retry_count": 3
+            },
+            {
+                "name": "music_generation",
+                "type": "music",
+                "timeout": 300,
+                "retry_count": 2
+            },
+            {
+                "name": "video_editing",
+                "type": "editing",
+                "timeout": 600,
+                "retry_count": 2
+            }
+        ],
+        "parallel_processing": False,
+        "max_total_time": 3600,
+        "error_handling": {
+            "retry_delay": 30,
+            "fallback_enabled": True
+        }
+    },
+    "fast_workflow": {
+        "steps": [
+            {
+                "name": "content_generation",
+                "type": "content",
+                "timeout": 180,
+                "retry_count": 2
+            },
+            {
+                "name": "video_generation",
+                "type": "video",
+                "timeout": 300,
+                "retry_count": 1
+            },
+            {
+                "name": "voice_synthesis",
+                "type": "voice",
+                "timeout": 180,
+                "retry_count": 2
+            },
+            {
+                "name": "video_editing",
+                "type": "editing",
+                "timeout": 300,
+                "retry_count": 1
+            }
+        ],
+        "parallel_processing": True,
+        "max_total_time": 1800,
+        "error_handling": {
+            "retry_delay": 15,
+            "fallback_enabled": True
+        }
+    }
+}
+
 def update_user_config(new_config: Dict[str, Any]) -> None:
     """
     更新用户配置
