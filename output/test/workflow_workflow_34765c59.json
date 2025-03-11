@@ -1,0 +1,327 @@
+{
+  "id": "workflow_34765c59",
+  "type": "video_creation",
+  "status": "completed",
+  "created_at": "2025-03-11T11:55:13.870630",
+  "updated_at": "2025-03-11T11:55:13.870633",
+  "parameters": {
+    "theme": "科技",
+    "style": "informative",
+    "type": "narrative",
+    "duration": 60.0,
+    "target_audience": [
+      "年轻人",
+      "科技爱好者"
+    ],
+    "storyboard_style": "storyboard",
+    "generate_images": true,
+    "image_source": "mock",
+    "image_style": "realistic",
+    "video_model": "mock"
+  },
+  "stages": {
+    "script_creation": {
+      "status": "completed",
+      "started_at": "2025-03-11T11:50:13.870637",
+      "completed_at": "2025-03-11T11:51:13.870647",
+      "error": null
+    },
+    "storyboard_creation": {
+      "status": "completed",
+      "started_at": "2025-03-11T11:52:13.870653",
+      "completed_at": "2025-03-11T11:53:13.870657",
+      "error": null
+    },
+    "video_generation": {
+      "status": "completed",
+      "started_at": "2025-03-11T11:54:13.870660",
+      "completed_at": "2025-03-11T11:55:13.870663",
+      "error": null
+    }
+  },
+  "assets": {
+    "script": {
+      "id": "script_50cca425",
+      "title": "人工智能改变生活的5种方式",
+      "theme": "科技",
+      "type": "narrative",
+      "target_audience": [
+        "年轻人",
+        "科技爱好者"
+      ],
+      "sections": [
+        {
+          "id": "section_c046784a",
+          "order": 0,
+          "content": "这是第1个场景的内容。介绍AI在日常生活中的应用场景。",
+          "visual_description": "场景1：展示一个人使用智能设备，周围环境现代化。",
+          "audio_description": "背景音乐轻快，narrator讲述AI如何改变生活。",
+          "duration": 12.0,
+          "tags": [
+            "AI",
+            "科技",
+            "日常生活"
+          ]
+        },
+        {
+          "id": "section_d4abfbb9",
+          "order": 1,
+          "content": "这是第2个场景的内容。介绍AI在日常生活中的应用场景。",
+          "visual_description": "场景2：展示一个人使用智能设备，周围环境现代化。",
+          "audio_description": "背景音乐轻快，narrator讲述AI如何改变生活。",
+          "duration": 12.0,
+          "tags": [
+            "AI",
+            "科技",
+            "日常生活"
+          ]
+        },
+        {
+          "id": "section_fba893a3",
+          "order": 2,
+          "content": "这是第3个场景的内容。介绍AI在日常生活中的应用场景。",
+          "visual_description": "场景3：展示一个人使用智能设备，周围环境现代化。",
+          "audio_description": "背景音乐轻快，narrator讲述AI如何改变生活。",
+          "duration": 12.0,
+          "tags": [
+            "AI",
+            "科技",
+            "日常生活"
+          ]
+        },
+        {
+          "id": "section_ef460576",
+          "order": 3,
+          "content": "这是第4个场景的内容。介绍AI在日常生活中的应用场景。",
+          "visual_description": "场景4：展示一个人使用智能设备，周围环境现代化。",
+          "audio_description": "背景音乐轻快，narrator讲述AI如何改变生活。",
+          "duration": 12.0,
+          "tags": [
+            "AI",
+            "科技",
+            "日常生活"
+          ]
+        },
+        {
+          "id": "section_361ef0c3",
+          "order": 4,
+          "content": "这是第5个场景的内容。介绍AI在日常生活中的应用场景。",
+          "visual_description": "场景5：展示一个人使用智能设备，周围环境现代化。",
+          "audio_description": "背景音乐轻快，narrator讲述AI如何改变生活。",
+          "duration": 12.0,
+          "tags": [
+            "AI",
+            "科技",
+            "日常生活"
+          ]
+        }
+      ],
+      "total_duration": 60.0,
+      "creator_id": "test_user",
+      "version": 1,
+      "keywords": [
+        "AI",
+        "智能家居",
+        "自动化"
+      ],
+      "metadata": {
+        "created_for_test": true
+      }
+    },
+    "storyboard": {
+      "id": "storyboard_0526af29",
+      "script_id": "script_50cca425",
+      "title": "人工智能改变生活的5种方式 Storyboard",
+      "style": "storyboard",
+      "frames": [
+        {
+          "id": "frame_bc7b1578",
+          "order": 0,
+          "script_section_id": "section_c046784a",
+          "frame_type": "keyframe",
+          "shot_type": "wide",
+          "description": "分镜1",
+          "visual_description": "场景1：展示一个人使用智能设备，周围环境现代化。",
+          "dialogue": null,
+          "duration": 12.0,
+          "camera_movement": "静态",
+          "composition": "中心构图",
+          "comments": "测试用分镜"
+        },
+        {
+          "id": "frame_25340ead",
+          "order": 1,
+          "script_section_id": "section_d4abfbb9",
+          "frame_type": "establishing",
+          "shot_type": "medium",
+          "description": "分镜2",
+          "visual_description": "场景2：展示一个人使用智能设备，周围环境现代化。",
+          "dialogue": null,
+          "duration": 12.0,
+          "camera_movement": "静态",
+          "composition": "中心构图",
+          "comments": "测试用分镜"
+        },
+        {
+          "id": "frame_282ba32a",
+          "order": 2,
+          "script_section_id": "section_fba893a3",
+          "frame_type": "closeup",
+          "shot_type": "close_up",
+          "description": "分镜3",
+          "visual_description": "场景3：展示一个人使用智能设备，周围环境现代化。",
+          "dialogue": null,
+          "duration": 12.0,
+          "camera_movement": "静态",
+          "composition": "中心构图",
+          "comments": "测试用分镜"
+        },
+        {
+          "id": "frame_c813a498",
+          "order": 3,
+          "script_section_id": "section_ef460576",
+          "frame_type": "action",
+          "shot_type": "aerial",
+          "description": "分镜4",
+          "visual_description": "场景4：展示一个人使用智能设备，周围环境现代化。",
+          "dialogue": null,
+          "duration": 12.0,
+          "camera_movement": "静态",
+          "composition": "中心构图",
+          "comments": "测试用分镜"
+        },
+        {
+          "id": "frame_c4237599",
+          "order": 4,
+          "script_section_id": "section_361ef0c3",
+          "frame_type": "transition",
+          "shot_type": "pov",
+          "description": "分镜5",
+          "visual_description": "场景5：展示一个人使用智能设备，周围环境现代化。",
+          "dialogue": null,
+          "duration": 12.0,
+          "camera_movement": "静态",
+          "composition": "中心构图",
+          "comments": "测试用分镜"
+        }
+      ],
+      "transitions": [],
+      "images": [
+        {
+          "id": "img_cd6f6302",
+          "frame_id": "frame_bc7b1578",
+          "url": "https://picsum.photos/seed/1/1024/1024",
+          "width": 1024,
+          "height": 1024,
+          "source": "MOCK",
+          "prompt": "场景1：展示一个人使用智能设备，周围环境现代化。",
+          "metadata": {
+            "style": "realistic",
+            "generated_at": "2025-03-11T11:55:13.870683"
+          }
+        },
+        {
+          "id": "img_7a3d7f6a",
+          "frame_id": "frame_25340ead",
+          "url": "https://picsum.photos/seed/2/1024/1024",
+          "width": 1024,
+          "height": 1024,
+          "source": "MOCK",
+          "prompt": "场景2：展示一个人使用智能设备，周围环境现代化。",
+          "metadata": {
+            "style": "realistic",
+            "generated_at": "2025-03-11T11:55:13.870696"
+          }
+        },
+        {
+          "id": "img_d3953ecb",
+          "frame_id": "frame_282ba32a",
+          "url": "https://picsum.photos/seed/3/1024/1024",
+          "width": 1024,
+          "height": 1024,
+          "source": "MOCK",
+          "prompt": "场景3：展示一个人使用智能设备，周围环境现代化。",
+          "metadata": {
+            "style": "realistic",
+            "generated_at": "2025-03-11T11:55:13.870708"
+          }
+        },
+        {
+          "id": "img_a0d7e5f3",
+          "frame_id": "frame_c813a498",
+          "url": "https://picsum.photos/seed/4/1024/1024",
+          "width": 1024,
+          "height": 1024,
+          "source": "MOCK",
+          "prompt": "场景4：展示一个人使用智能设备，周围环境现代化。",
+          "metadata": {
+            "style": "realistic",
+            "generated_at": "2025-03-11T11:55:13.870716"
+          }
+        },
+        {
+          "id": "img_f22d7b45",
+          "frame_id": "frame_c4237599",
+          "url": "https://picsum.photos/seed/5/1024/1024",
+          "width": 1024,
+          "height": 1024,
+          "source": "MOCK",
+          "prompt": "场景5：展示一个人使用智能设备，周围环境现代化。",
+          "metadata": {
+            "style": "realistic",
+            "generated_at": "2025-03-11T11:55:13.870735"
+          }
+        }
+      ],
+      "total_duration": 60.0,
+      "created_at": "2025-03-11T11:55:13.870738",
+      "updated_at": "2025-03-11T11:55:13.870740",
+      "creator_id": "test_user",
+      "status": "completed",
+      "metadata": {}
+    },
+    "videos": [
+      {
+        "id": "video_65ed798e",
+        "script_section_id": "section_c046784a",
+        "url": "https://example.com/mock_video_0.mp4",
+        "duration": 12.0,
+        "created_at": "2025-03-11T11:55:13.870752"
+      },
+      {
+        "id": "video_d7133789",
+        "script_section_id": "section_d4abfbb9",
+        "url": "https://example.com/mock_video_1.mp4",
+        "duration": 12.0,
+        "created_at": "2025-03-11T11:55:13.870765"
+      },
+      {
+        "id": "video_271cfb09",
+        "script_section_id": "section_fba893a3",
+        "url": "https://example.com/mock_video_2.mp4",
+        "duration": 12.0,
+        "created_at": "2025-03-11T11:55:13.870773"
+      },
+      {
+        "id": "video_e48ec7e0",
+        "script_section_id": "section_ef460576",
+        "url": "https://example.com/mock_video_3.mp4",
+        "duration": 12.0,
+        "created_at": "2025-03-11T11:55:13.870782"
+      },
+      {
+        "id": "video_3c6ee15b",
+        "script_section_id": "section_361ef0c3",
+        "url": "https://example.com/mock_video_4.mp4",
+        "duration": 12.0,
+        "created_at": "2025-03-11T11:55:13.870795"
+      }
+    ],
+    "final_video": {
+      "id": "final_7883d6ee",
+      "url": "https://example.com/final_video.mp4",
+      "duration": 60.0,
+      "created_at": "2025-03-11T11:55:13.870808"
+    }
+  }
+}

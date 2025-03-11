@@ -62,7 +62,7 @@ class ContentAgent(BaseAgent):
                 script = await self._generate_script(parameters, session_id)
                 
                 # 保存脚本到文件
-                script_json = script.json(ensure_ascii=False, indent=2)
+                script_json = script.model_dump_json(indent=2)
                 file_path = await file_manager.save_json_file(
                     data=json.loads(script_json),
                     filename=f"script_{script.id}.json",
@@ -97,7 +97,7 @@ class ContentAgent(BaseAgent):
                 revised_script = await self._revise_script(script, feedback, session_id)
                 
                 # 保存修改后的脚本到文件
-                script_json = revised_script.json(ensure_ascii=False, indent=2)
+                script_json = revised_script.model_dump_json(indent=2)
                 file_path = await file_manager.save_json_file(
                     data=json.loads(script_json),
                     filename=f"script_{revised_script.id}_revised.json",
@@ -397,7 +397,7 @@ class ContentAgent(BaseAgent):
         prompt_manager = get_prompt_manager()
         
         # 将脚本转换为JSON字符串
-        script_json = script.json(ensure_ascii=False)
+        script_json = script.model_dump_json(indent=2)
         
         # 准备模板参数并渲染
         template_params = {

@@ -31,6 +31,7 @@ class AgentType(str, Enum):
     AUDIO = "audio"  # 语音与音乐代理
     POSTPROD = "postprod"  # 后期制作代理
     DISTRIBUTION = "distribution"  # 分发代理
+    STORYBOARD = "storyboard"  # 分镜代理
     USER = "user"  # 用户
 
 
@@ -46,8 +47,8 @@ class Message(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now, description="消息创建时间")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="附加元数据")
 
-    class Config:
-        schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "id": "msg_123456",
                 "type": "command",
@@ -70,6 +71,7 @@ class Message(BaseModel):
                 }
             }
         }
+    }
 
 
 class UserChoice(BaseModel):

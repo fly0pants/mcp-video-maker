@@ -9,9 +9,17 @@ from models.mcp import (
     create_command_message
 )
 from agents.mcp_base_agent import MCPBaseAgent
-from models.script import Script, ScriptSection
+from models.video import Script, ScriptSection
 from utils.prompt_manager import get_prompt_manager
 import openai
+
+# 检查是否处于测试模式
+def is_test_mode():
+    try:
+        import sys
+        return any("test" in arg for arg in sys.argv)
+    except:
+        return False
 
 
 class MCPContentAgent(MCPBaseAgent):
@@ -24,6 +32,7 @@ class MCPContentAgent(MCPBaseAgent):
             agent_name="Content Generation Agent"
         )
         self.openai_client = None
+        self.test_mode = is_test_mode()
         
     async def on_start(self):
         """代理启动时的自定义逻辑，初始化OpenAI客户端"""
@@ -41,6 +50,7 @@ class MCPContentAgent(MCPBaseAgent):
                 # 模拟模式，不需要实际API密钥
                 self.openai_client = None
             else:
+                # 修复: 不使用proxies参数
                 self.openai_client = openai.AsyncOpenAI(api_key=api_key)
                 self.logger.info("OpenAI client initialized")
                 
@@ -104,37 +114,40 @@ class MCPContentAgent(MCPBaseAgent):
                     data={"script": modified_script.dict() if modified_script else None}
                 )
                 
-            elif command.action == "analyze_trend":
-                # 分析趋势
-                topic = command.parameters.get("topic")
+            elif command.action == "generate_storyboard_content":
+                # 生成分镜内容
+                script_data = command.parameters.get("script")
+                style = command.parameters.get("style", "storyboard")
                 
-                if not topic:
+                if not script_data:
                     return message.create_error_response(
                         error_code="INVALID_PARAMETERS",
-                        error_message="Missing required parameter: topic"
+                        error_message="Missing required parameter: script"
                     )
                 
-                # 分析趋势
-                trend_analysis = await self._analyze_trend(topic)
+                # 将字典转换为Script对象
+                script = Script(**script_data)
+                
+                # 生成分镜内容
+                storyboard_data = await self._generate_storyboard_content(script, style, session_id)
                 
                 # 返回响应
                 return message.create_response(
                     success=True,
-                    message="Trend analysis completed",
-                    data={"trend_analysis": trend_analysis}
+                    message="Storyboard content generated successfully",
+                    data={"storyboard_data": storyboard_data}
                 )
                 
             else:
-                # 未知命令
                 return message.create_error_response(
                     error_code="UNKNOWN_COMMAND",
-                    error_message=f"Unknown command action: {command.action}"
+                    error_message=f"Unknown action: {command.action}"
                 )
                 
         except Exception as e:
-            self.logger.error(f"Error handling command {command.action}: {str(e)}")
+            self.logger.error(f"Error handling command: {str(e)}")
             return message.create_error_response(
-                error_code="PROCESSING_ERROR",
+                error_code="COMMAND_ERROR",
                 error_message=f"Error processing command: {str(e)}"
             )
     
@@ -213,7 +226,7 @@ class MCPContentAgent(MCPBaseAgent):
                 
                 # 创建脚本对象
                 script = Script(
-                    script_id=f"script_{uuid.uuid4().hex[:8]}",
+                    id=f"script_{uuid.uuid4().hex[:8]}",
                     title=script_data.get("title", f"{theme}短视频脚本"),
                     theme=theme,
                     style=style,
@@ -223,18 +236,20 @@ class MCPContentAgent(MCPBaseAgent):
                     total_duration=duration,
                     keywords=keywords,
                     created_at=datetime.now().isoformat(),
+                    creator_id=f"agent_{self.agent_id}",
                     sections=[]
                 )
                 
                 # 添加场景
-                for section_data in script_data.get("sections", []):
+                for i, section_data in enumerate(script_data.get("sections", [])):
                     section = ScriptSection(
-                        section_id=f"section_{uuid.uuid4().hex[:8]}",
+                        id=f"section_{uuid.uuid4().hex[:8]}",
                         content=section_data.get("content", ""),
                         visual_description=section_data.get("visual_description", ""),
                         audio_description=section_data.get("audio_description", ""),
                         duration=float(section_data.get("duration", 5.0)),
-                        tags=section_data.get("tags", [])
+                        tags=section_data.get("tags", []),
+                        order=i
                     )
                     script.sections.append(section)
                     
@@ -276,7 +291,7 @@ class MCPContentAgent(MCPBaseAgent):
         
         # 创建脚本对象
         script = Script(
-            script_id=script_id,
+            id=script_id,
             title=f"{theme} - {style}风格短视频",
             theme=theme,
             style=style,
@@ -286,6 +301,7 @@ class MCPContentAgent(MCPBaseAgent):
             total_duration=duration,
             keywords=[theme, style, script_type],
             created_at=datetime.now().isoformat(),
+            creator_id=f"agent_{self.agent_id}",
             sections=[]
         )
         
@@ -293,12 +309,13 @@ class MCPContentAgent(MCPBaseAgent):
         section_duration = duration / num_sections
         for i in range(num_sections):
             section = ScriptSection(
-                section_id=f"mock_section_{i}_{uuid.uuid4().hex[:6]}",
+                id=f"mock_section_{i}_{uuid.uuid4().hex[:6]}",
                 content=f"这是关于{theme}的第{i+1}个场景，采用{style}风格。",
                 visual_description=f"展示{theme}相关的{style}风格图像",
                 audio_description=f"背景音乐：{style}风格轻音乐",
                 duration=section_duration,
-                tags=[theme, style, f"场景{i+1}"]
+                tags=[theme, style, f"场景{i+1}"],
+                order=i
             )
             script.sections.append(section)
         
@@ -329,7 +346,7 @@ class MCPContentAgent(MCPBaseAgent):
             
             if self.openai_client:
                 # 将脚本转换为JSON字符串
-                script_json = script.json(ensure_ascii=False)
+                script_json = script.model_dump_json(indent=2)
                 
                 # 准备模板参数并渲染
                 template_params = {
@@ -367,7 +384,7 @@ class MCPContentAgent(MCPBaseAgent):
                 
                 # 创建修改后的脚本对象，保留原始ID
                 revised_script = Script(
-                    script_id=script.script_id,
+                    id=script.id,
                     title=revised_script_data.get("title", script.title),
                     theme=revised_script_data.get("theme", script.theme),
                     style=revised_script_data.get("style", script.style),
@@ -378,27 +395,29 @@ class MCPContentAgent(MCPBaseAgent):
                     keywords=revised_script_data.get("keywords", script.keywords),
                     created_at=script.created_at,
                     updated_at=datetime.now().isoformat(),
+                    creator_id=script.creator_id,
                     sections=[]
                 )
                 
                 # 添加修改后的场景
-                section_map = {section.section_id: section for section in script.sections}
+                section_map = {section.id: section for section in script.sections}
                 
-                for section_data in revised_script_data.get("sections", []):
+                for i, section_data in enumerate(revised_script_data.get("sections", [])):
                     # 尽量保留原始场景ID
-                    original_id = section_data.get("section_id")
+                    original_id = section_data.get("id")
                     if original_id and original_id in section_map:
                         section_id = original_id
                     else:
                         section_id = f"section_{uuid.uuid4().hex[:8]}"
                         
                     section = ScriptSection(
-                        section_id=section_id,
+                        id=section_id,
                         content=section_data.get("content", ""),
                         visual_description=section_data.get("visual_description", ""),
                         audio_description=section_data.get("audio_description", ""),
                         duration=float(section_data.get("duration", 5.0)),
-                        tags=section_data.get("tags", [])
+                        tags=section_data.get("tags", []),
+                        order=i
                     )
                     revised_script.sections.append(section)
                 
@@ -455,4 +474,142 @@ class MCPContentAgent(MCPBaseAgent):
                 f"如何正确理解{topic}"
             ],
             "analysis_timestamp": datetime.now().isoformat()
+        }
+    
+    async def _generate_storyboard_content(self, script: Script, style: str, session_id: str) -> Dict[str, Any]:
+        """
+        生成分镜内容
+        
+        Args:
+            script: 脚本对象
+            style: 分镜风格
+            session_id: 会话ID
+            
+        Returns:
+            分镜数据
+        """
+        self.logger.info(f"Generating storyboard content for script: {script.id} with style: {style}")
+        
+        try:
+            if self.openai_client:
+                # 获取提示管理器
+                prompt_manager = get_prompt_manager()
+                
+                # 准备生成分镜的提示参数
+                script_sections_content = ""
+                for section in script.sections:
+                    script_sections_content += f"场景 {section.order + 1}:\n"
+                    script_sections_content += f"内容: {section.content}\n"
+                    script_sections_content += f"视觉描述: {section.visual_description}\n"
+                    if section.audio_description:
+                        script_sections_content += f"音频描述: {section.audio_description}\n"
+                    script_sections_content += "\n"
+                
+                prompt_params = {
+                    "title": script.title,
+                    "theme": script.theme,
+                    "type": script.type,
+                    "style": style,
+                    "duration": script.total_duration,
+                    "script_content": script_sections_content,
+                    "storyboard_style": style
+                }
+                
+                # 渲染提示模板
+                prompt = prompt_manager.render_template(
+                    "storyboard_agent_prompts", 
+                    "create_storyboard", 
+                    prompt_params
+                )
+                system_role = prompt_manager.get_system_role("storyboard_agent_prompts", "create_storyboard")
+                
+                # 调用OpenAI API
+                response = await self.openai_client.chat.completions.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": system_role},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=4000
+                )
+                
+                storyboard_text = response.choices[0].message.content
+                
+                # 解析生成的分镜内容
+                # 这里只返回原始内容，具体的解析和创建Storyboard对象的工作交给MCPStoryboardAgent
+                storyboard_data = {
+                    "raw_content": storyboard_text,
+                    "style": style,
+                    "frames": self._parse_storyboard_frames(storyboard_text, script),
+                    "metadata": {
+                        "generated_at": datetime.now().isoformat(),
+                        "model": "gpt-4"
+                    }
+                }
+                
+                return storyboard_data
+            else:
+                # 模拟分镜数据
+                return self._generate_mock_storyboard_data(script, style)
+                
+        except Exception as e:
+            self.logger.error(f"Error generating storyboard content: {str(e)}")
+            raise
+    
+    def _parse_storyboard_frames(self, storyboard_text: str, script: Script) -> List[Dict[str, Any]]:
+        """
+        从生成的文本中解析分镜帧
+        
+        Args:
+            storyboard_text: 生成的分镜文本
+            script: 脚本对象
+            
+        Returns:
+            分镜帧列表
+        """
+        # 简单实现：为每个脚本场景创建一个分镜帧
+        frames = []
+        
+        for i, section in enumerate(script.sections):
+            frame_id = f"frame_{uuid.uuid4().hex[:8]}"
+            
+            frame = {
+                "id": frame_id,
+                "order": i,
+                "script_section_id": section.id,
+                "frame_type": "SCENE",
+                "shot_type": "MEDIUM",
+                "content": section.content,
+                "visual_description": section.visual_description,
+                "audio_description": section.audio_description,
+                "duration": section.duration or 5.0,
+                "metadata": {}
+            }
+            
+            frames.append(frame)
+        
+        return frames
+    
+    def _generate_mock_storyboard_data(self, script: Script, style: str) -> Dict[str, Any]:
+        """
+        生成模拟的分镜数据
+        
+        Args:
+            script: 脚本对象
+            style: 分镜风格
+            
+        Returns:
+            模拟的分镜数据
+        """
+        frames = self._parse_storyboard_frames("", script)
+        
+        return {
+            "raw_content": f"模拟分镜内容 - {script.title}",
+            "style": style,
+            "frames": frames,
+            "metadata": {
+                "generated_at": datetime.now().isoformat(),
+                "mock": True
+            }
         } 

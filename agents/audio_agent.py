@@ -10,6 +10,7 @@ from models.message import Message, MessageType, AgentType
 from models.video import AudioAsset
 from agents.base_agent import BaseAgent
 from utils.file_manager import file_manager
+from utils.prompt_manager import get_prompt_manager
 from utils.logger import system_logger
 from config.config import SYSTEM_CONFIG, AUDIO_CONFIG, API_KEYS
 
@@ -164,6 +165,8 @@ class AudioAgent(BaseAgent):
         super().__init__(agent_type=AgentType.AUDIO, name="音频生成代理")
         self.voice_apis = {}  # 存储不同语音合成工具的API实例
         self.music_apis = {}  # 存储不同音乐生成工具的API实例
+        self.file_manager = file_manager  # 文件管理工具
+        self.prompt_manager = get_prompt_manager()  # 提示词管理工具
         
     async def initialize(self):
         """初始化代理"""

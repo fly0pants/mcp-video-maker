@@ -1,9 +1,15 @@
 from typing import Dict, Any, Optional
 import requests
+import warnings
 from config.config import MODEL_CONFIG, API_KEYS
 
 class VideoGenerationAPI:
-    """视频生成API封装类"""
+    """
+    视频生成API封装类
+    
+    @deprecated: 此API已被弃用，将在未来版本中移除。
+    MCP agents现在使用其内部API实现。
+    """
     
     def __init__(self, model_name: str):
         """
@@ -12,6 +18,13 @@ class VideoGenerationAPI:
         Args:
             model_name: 使用的模型名称
         """
+        warnings.warn(
+            "VideoGenerationAPI is deprecated and will be removed in a future version. "
+            "MCP agents now use their own internal API implementations.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
         self.model_name = model_name
         self.config = MODEL_CONFIG.get(model_name, {})
         self.api_key = API_KEYS.get(model_name, "")

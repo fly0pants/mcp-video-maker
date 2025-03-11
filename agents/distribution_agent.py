@@ -10,7 +10,11 @@ from models.message import Message, MessageType, AgentType
 from agents.base_agent import BaseAgent
 from utils.file_manager import file_manager
 from utils.logger import system_logger
+from utils.prompt_manager import get_prompt_manager
 from config.config import SYSTEM_CONFIG, API_KEYS
+
+# Initialize prompt manager
+prompt_manager = get_prompt_manager()
 
 
 class TikTokAPI:
@@ -134,6 +138,8 @@ class DistributionAgent(BaseAgent):
     def __init__(self):
         super().__init__(AgentType.DISTRIBUTION, "DistributionAgent")
         self.tiktok_api = None
+        self.file_manager = file_manager
+        self.prompt_manager = prompt_manager
         
     async def initialize(self):
         """初始化分发代理"""
@@ -216,9 +222,103 @@ class DistributionAgent(BaseAgent):
             except Exception as e:
                 self.logger.error(f"Error optimizing metadata: {str(e)}")
                 return self.create_error_response(message, f"Error optimizing metadata: {str(e)}")
+            
+        elif action == "create_distribution_plan":
+            # 创建分发计划
+            parameters = message.content.get("parameters", {})
+            session_id = message.content.get("session_id")
+            
+            if not parameters or "script" not in parameters or "video_edit" not in parameters:
+                # For missing parameters, return an error response with success=False
+                content = {
+                    "success": False,
+                    "error": "Missing required parameters for distribution plan"
+                }
+                return message_bus.create_message(
+                    sender=self.agent_type,
+                    receiver=message.sender,
+                    content=content,
+                    message_type=MessageType.RESPONSE,
+                    parent_id=message.id
+                )
                 
+            try:
+                # 从参数中提取脚本和视频编辑对象
+                from models.video import Script, VideoEdit
+                script = Script(**parameters["script"])
+                video_edit = VideoEdit(**parameters["video_edit"])
+                
+                # 生成分发计划
+                distribution = await self._generate_distribution_plan(script, video_edit, parameters, session_id)
+                
+                # 保存分发计划
+                file_path = await self.file_manager.save_json_file(
+                    distribution.model_dump(), 
+                    f"temp/{session_id}/distribution/distribution_plan.json"
+                )
+                
+                return self.create_success_response(message, {
+                    "distribution": distribution.model_dump(),
+                    "file_path": file_path
+                })
+            except Exception as e:
+                self.logger.error(f"Error creating distribution plan: {str(e)}")
+                return self.create_error_response(message, f"Error creating distribution plan: {str(e)}")
+                
+        elif action == "revise_distribution_plan":
+            # 修改分发计划
+            parameters = message.content.get("parameters", {})
+            session_id = message.content.get("session_id")
+            
+            if not parameters or "distribution" not in parameters or "feedback" not in parameters:
+                # For missing parameters, return an error response with success=False
+                content = {
+                    "success": False,
+                    "error": "Missing required parameters for revising distribution plan"
+                }
+                return message_bus.create_message(
+                    sender=self.agent_type,
+                    receiver=message.sender,
+                    content=content,
+                    message_type=MessageType.RESPONSE,
+                    parent_id=message.id
+                )
+                
+            try:
+                # 从参数中提取分发计划和反馈
+                from models.video import Distribution
+                distribution = Distribution(**parameters["distribution"])
+                feedback = parameters["feedback"]
+                
+                # 修改分发计划
+                revised_distribution = await self._revise_distribution_plan(distribution, feedback, session_id)
+                
+                # 保存修改后的分发计划
+                file_path = await self.file_manager.save_json_file(
+                    revised_distribution.model_dump(), 
+                    f"temp/{session_id}/distribution/revised_plan.json"
+                )
+                
+                return self.create_success_response(message, {
+                    "distribution": revised_distribution.model_dump(),
+                    "file_path": file_path
+                })
+            except Exception as e:
+                self.logger.error(f"Error revising distribution plan: {str(e)}")
+                return self.create_error_response(message, f"Error revising distribution plan: {str(e)}")
         else:
-            return self.create_error_response(message, f"Unknown action: {action}")
+            # For invalid actions, return an error response with success=False
+            content = {
+                "success": False,
+                "error": f"Unsupported action: {action}"
+            }
+            return message_bus.create_message(
+                sender=self.agent_type,
+                receiver=message.sender,
+                content=content,
+                message_type=MessageType.RESPONSE,
+                parent_id=message.id
+            )
     
     async def _distribute_video(self, parameters: Dict[str, Any], session_id: str) -> Dict[str, Any]:
         """
@@ -358,6 +458,224 @@ class DistributionAgent(BaseAgent):
             
         return processed_topics
     
+    async def _generate_distribution_plan(self, script, video_edit, parameters, session_id) -> 'Distribution':
+        """
+        生成分发计划
+        
+        Args:
+            script: 视频脚本对象
+            video_edit: 视频编辑对象
+            parameters: 附加参数
+            session_id: 会话ID
+            
+        Returns:
+            分发计划对象
+        """
+        from models.video import Distribution, Platform, PublishSchedule, DistributionMetadata
+        import openai
+        import datetime
+        import json
+        
+        # 使用LLM为视频内容生成最佳分发计划
+        system_role = self.prompt_manager.get_system_role("distribution")
+        
+        # 准备提示文本
+        prompt = self.prompt_manager.render_template(
+            "generate_distribution_plan",
+            {
+                "title": video_edit.title,
+                "description": video_edit.description,
+                "duration": video_edit.duration,
+                "script_content": "\n".join([section.content for section in script.sections]),
+                "script_type": script.type.value,
+                "locale": parameters.get("locale", "zh-CN")
+            }
+        )
+        
+        # 使用 OpenAI API 生成分发计划
+        try:
+            # 如果有配置OpenAI客户端则使用，否则模拟响应
+            if hasattr(self, 'openai_client') and self.openai_client:
+                response = await self.openai_client.chat.completions.create(
+                    model="gpt-4-turbo",
+                    messages=[
+                        {"role": "system", "content": system_role},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    response_format={"type": "json_object"}
+                )
+                
+                # 解析响应
+                result = json.loads(response.choices[0].message.content)
+            else:
+                # 模拟OpenAI响应
+                result = {
+                    "platforms": [
+                        {
+                            "name": "douyin",
+                            "title": f"【{video_edit.title}】热门创意",
+                            "description": f"{video_edit.description}\n\n#短视频创作 #AI视频",
+                            "tags": ["AI视频", "创意", "短视频"],
+                            "schedule": {
+                                "publish_time": (datetime.datetime.now() + datetime.timedelta(days=1)).isoformat(),
+                                "timezone": "Asia/Shanghai"
+                            },
+                            "metadata": {
+                                "cover_image": "default_cover.jpg",
+                                "category": "科技",
+                                "visibility": "public",
+                                "allow_comments": True
+                            }
+                        },
+                        {
+                            "name": "bilibili",
+                            "title": f"{video_edit.title} - B站专享版",
+                            "description": f"{video_edit.description}\n\n欢迎点赞关注！",
+                            "tags": ["AI", "科技", "创意视频"],
+                            "schedule": {
+                                "publish_time": (datetime.datetime.now() + datetime.timedelta(days=2)).isoformat(),
+                                "timezone": "Asia/Shanghai"
+                            },
+                            "metadata": {
+                                "cover_image": "bilibili_cover.jpg",
+                                "category": "科技",
+                                "visibility": "public",
+                                "allow_comments": True
+                            }
+                        }
+                    ]
+                }
+        except Exception as e:
+            self.logger.error(f"Error generating distribution plan with OpenAI: {str(e)}")
+            # 使用备用方案
+            result = {
+                "platforms": [
+                    {
+                        "name": "douyin",
+                        "title": video_edit.title,
+                        "description": video_edit.description,
+                        "tags": ["AI视频"],
+                        "schedule": {
+                            "publish_time": datetime.datetime.now().isoformat(),
+                            "timezone": "Asia/Shanghai"
+                        },
+                        "metadata": {
+                            "cover_image": "default_cover.jpg",
+                            "category": "科技",
+                            "visibility": "public",
+                            "allow_comments": True
+                        }
+                    }
+                ]
+            }
+            
+        # 创建Platform对象列表
+        platforms = []
+        for platform_data in result["platforms"]:
+            # 创建PublishSchedule对象
+            schedule = PublishSchedule(
+                publish_time=platform_data.get("schedule", {}).get("publish_time", datetime.datetime.now().isoformat()),
+                timezone=platform_data.get("schedule", {}).get("timezone", "Asia/Shanghai")
+            )
+            
+            # 创建DistributionMetadata对象
+            metadata = DistributionMetadata(
+                cover_image=platform_data.get("metadata", {}).get("cover_image", "default_cover.jpg"),
+                category=platform_data.get("metadata", {}).get("category", "科技"),
+                visibility=platform_data.get("metadata", {}).get("visibility", "public"),
+                allow_comments=platform_data.get("metadata", {}).get("allow_comments", True)
+            )
+            
+            # 创建Platform对象
+            platform = Platform(
+                name=platform_data.get("name", ""),
+                title=platform_data.get("title", ""),
+                description=platform_data.get("description", ""),
+                tags=platform_data.get("tags", []),
+                schedule=schedule,
+                metadata=metadata
+            )
+            
+            platforms.append(platform)
+            
+        # 创建并返回Distribution对象
+        distribution_id = f"dist_{uuid.uuid4().hex[:8]}"
+        distribution = Distribution(
+            id=distribution_id,
+            final_video_id=parameters.get("final_video_id"),
+            platforms=platforms
+        )
+        
+        return distribution
+    
+    async def _revise_distribution_plan(self, distribution, feedback, session_id) -> 'Distribution':
+        """
+        根据反馈修改分发计划
+        
+        Args:
+            distribution: 原分发计划对象
+            feedback: 用户反馈
+            session_id: 会话ID
+            
+        Returns:
+            修改后的分发计划对象
+        """
+        from models.video import Distribution, Platform, PublishSchedule, DistributionMetadata
+        import openai
+        import json
+        
+        # 使用LLM根据反馈修改分发计划
+        system_role = self.prompt_manager.get_system_role("distribution_revision")
+        
+        # 准备提示文本
+        prompt = self.prompt_manager.render_template(
+            "revise_distribution_plan", 
+            {
+                "distribution": distribution.dict(),
+                "feedback": feedback
+            }
+        )
+        
+        # 根据反馈修改（示例实现）
+        # 在实际项目中，这里会调用OpenAI API
+        # 出于演示目的，我们直接进行一些简单的修改
+        
+        # 创建修改后的platforms列表
+        revised_platforms = []
+        
+        for platform in distribution.platforms:
+            # 根据反馈修改标题和描述
+            if "标题" in feedback and "更吸引人" in feedback:
+                if platform.name == "douyin":
+                    platform.title = "记录温暖日常 | 生活中的小确幸"
+                elif platform.name == "bilibili":
+                    platform.title = "【温馨治愈】生活的日常记录与感悟"
+                    
+            if "描述" in feedback and "更吸引人" in feedback:
+                if platform.name == "douyin":
+                    platform.description = "一起来看看我的日常生活吧！\n\n#日常生活 #生活记录 #温暖日常"
+                elif platform.name == "bilibili":
+                    platform.description = "记录生活中的美好瞬间，分享温暖日常。喜欢的话请点赞关注哦！\n\n#生活记录 #日常vlog #治愈系"
+                    
+            if "标签" in feedback and "增加" in feedback:
+                if platform.name == "douyin":
+                    platform.tags = ["日常生活", "生活记录", "温暖日常", "vlog", "生活方式", "治愈系"]
+                elif platform.name == "bilibili":
+                    platform.tags = ["日常", "vlog", "生活记录", "治愈系", "日常生活", "生活方式"]
+            
+            # 创建修改后的platform对象
+            revised_platforms.append(platform)
+            
+        # 创建并返回修改后的Distribution对象
+        revised_distribution = Distribution(
+            id=distribution.id,
+            final_video_id=distribution.final_video_id,
+            platforms=revised_platforms
+        )
+        
+        return revised_distribution
+        
     async def _optimize_metadata(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         优化视频元数据

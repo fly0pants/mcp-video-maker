@@ -186,41 +186,60 @@ class MCPCentralAgent(MCPBaseAgent):
         Returns:
             工作流ID
         """
-        # 生成工作流ID
+        # 创建工作流ID
         workflow_id = f"workflow_{uuid.uuid4().hex[:8]}"
         
-        # 创建工作流状态
-        self.workflows[workflow_id] = {
-            "workflow_id": workflow_id,
-            "session_id": session_id,
-            "status": "started",
+        # 创建工作流结构
+        workflow = {
+            "id": workflow_id,
+            "type": "video_creation",
+            "status": "processing",
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat(),
-            "completed_at": None,
-            "current_stage": "script_creation",
-            "stages": {
-                "script_creation": {"status": "pending", "started_at": None, "completed_at": None},
-                "video_generation": {"status": "pending", "started_at": None, "completed_at": None},
-                "audio_generation": {"status": "pending", "started_at": None, "completed_at": None},
-                "post_production": {"status": "pending", "started_at": None, "completed_at": None},
-                "distribution": {"status": "pending", "started_at": None, "completed_at": None}
-            },
             "parameters": parameters,
-            "assets": {},
-            "errors": []
+            "stages": {
+                "script_creation": {
+                    "status": "pending",
+                    "started_at": None,
+                    "completed_at": None,
+                    "error": None
+                },
+                "storyboard_creation": {
+                    "status": "pending",
+                    "started_at": None,
+                    "completed_at": None,
+                    "error": None
+                },
+                "video_generation": {
+                    "status": "pending",
+                    "started_at": None,
+                    "completed_at": None,
+                    "error": None
+                },
+                "audio_generation": {
+                    "status": "pending",
+                    "started_at": None,
+                    "completed_at": None,
+                    "error": None
+                },
+                "post_production": {
+                    "status": "pending",
+                    "started_at": None,
+                    "completed_at": None,
+                    "error": None
+                }
+            },
+            "assets": {
+                "script": None,
+                "storyboard": None,
+                "videos": [],
+                "audios": [],
+                "final_video": None
+            }
         }
         
-        # 发布工作流启动事件
-        await self.send_event(
-            target=f"topic:workflow.status",
-            event_type="workflow.started",
-            data={
-                "workflow_id": workflow_id,
-                "session_id": session_id,
-                "timestamp": datetime.now().isoformat()
-            },
-            session_id=session_id
-        )
+        # 存储工作流
+        self.workflows[workflow_id] = workflow
         
         # 启动第一阶段 - 脚本创建
         asyncio.create_task(self._execute_script_creation_stage(workflow_id, parameters, session_id))
@@ -240,16 +259,14 @@ class MCPCentralAgent(MCPBaseAgent):
             # 更新工作流状态
             self._update_workflow_stage(workflow_id, "script_creation", "processing")
             
-            # 提取脚本创建参数
+            # 提取脚本参数
             script_params = {
                 "theme": parameters.get("theme", ""),
-                "style": parameters.get("style", "幽默"),
-                "script_type": parameters.get("script_type", "知识普及"),
-                "target_audience": parameters.get("target_audience", ["年轻人", "学生"]),
+                "style": parameters.get("style", "informative"),
+                "script_type": parameters.get("type", "short_form"),
                 "duration": parameters.get("duration", 60.0),
-                "language": parameters.get("language", "zh"),
-                "keywords": parameters.get("keywords", []),
-                "special_requirements": parameters.get("special_requirements", "")
+                "references": parameters.get("references", []),
+                "extra_requirements": parameters.get("requirements", "")
             }
             
             # 发送命令给内容代理
@@ -260,8 +277,7 @@ class MCPCentralAgent(MCPBaseAgent):
                 action="create_script",
                 parameters=script_params,
                 session_id=session_id,
-                wait_for_response=True,
-                response_timeout=120.0  # 脚本创建可能需要较长时间
+                wait_for_response=True
             )
             
             if not response or response.header.message_type == MCPMessageType.ERROR:
@@ -278,17 +294,17 @@ class MCPCentralAgent(MCPBaseAgent):
                 script = response.body.data.get("script")
                 
                 if script:
-                    # 保存脚本到工作流资产
+                    # 保存脚本到工作流
                     self.workflows[workflow_id]["assets"]["script"] = script
                     
                     # 更新工作流状态
                     self._update_workflow_stage(workflow_id, "script_creation", "completed")
                     
-                    # 继续下一阶段 - 视频生成
-                    asyncio.create_task(self._execute_video_generation_stage(workflow_id, script, parameters, session_id))
+                    # 继续下一阶段 - 生成分镜
+                    asyncio.create_task(self._execute_storyboard_stage(workflow_id, script, parameters, session_id))
                 else:
-                    self._update_workflow_stage(workflow_id, "script_creation", "failed", error="Script data missing in response")
-                    self._update_workflow_status(workflow_id, "failed", error="Script data missing in response")
+                    self._update_workflow_stage(workflow_id, "script_creation", "failed", error="No script generated")
+                    self._update_workflow_status(workflow_id, "failed", error="No script generated")
             else:
                 self._update_workflow_stage(workflow_id, "script_creation", "failed", error="Invalid response from content agent")
                 self._update_workflow_status(workflow_id, "failed", error="Invalid response from content agent")
@@ -297,6 +313,137 @@ class MCPCentralAgent(MCPBaseAgent):
             error_msg = f"Error in script creation stage: {str(e)}"
             self.logger.error(error_msg)
             self._update_workflow_stage(workflow_id, "script_creation", "failed", error=error_msg)
+            self._update_workflow_status(workflow_id, "failed", error=error_msg)
+            
+    async def _execute_storyboard_stage(self, workflow_id: str, script: Dict[str, Any], parameters: Dict[str, Any], session_id: str):
+        """
+        执行分镜生成阶段
+        
+        Args:
+            workflow_id: 工作流ID
+            script: 脚本数据
+            parameters: 创建参数
+            session_id: 会话ID
+        """
+        try:
+            # 更新工作流状态
+            self._update_workflow_stage(workflow_id, "storyboard_creation", "processing")
+            
+            # 第一步：使用内容代理生成分镜内容
+            storyboard_params = {
+                "script": script,
+                "style": parameters.get("storyboard_style", "storyboard")
+            }
+            
+            self.logger.info(f"Sending generate_storyboard_content command to content_agent for workflow {workflow_id}")
+            
+            content_response = await self.send_command(
+                target="content_agent",
+                action="generate_storyboard_content",
+                parameters=storyboard_params,
+                session_id=session_id,
+                wait_for_response=True
+            )
+            
+            if not content_response or content_response.header.message_type == MCPMessageType.ERROR:
+                error_msg = "Failed to generate storyboard content"
+                if content_response and isinstance(content_response.body, MCPError):
+                    error_msg = f"{error_msg}: {content_response.body.error_message}"
+                
+                self._update_workflow_stage(workflow_id, "storyboard_creation", "failed", error=error_msg)
+                self._update_workflow_status(workflow_id, "failed", error=error_msg)
+                return
+            
+            # 第二步：将分镜内容发送给分镜代理处理
+            if isinstance(content_response.body, MCPResponse) and content_response.body.success:
+                storyboard_data = content_response.body.data.get("storyboard_data")
+                
+                if storyboard_data:
+                    # 发送命令给分镜代理
+                    self.logger.info(f"Sending process_storyboard command to storyboard_agent for workflow {workflow_id}")
+                    
+                    process_params = {
+                        "storyboard_data": storyboard_data,
+                        "script": script
+                    }
+                    
+                    storyboard_response = await self.send_command(
+                        target="storyboard_agent",
+                        action="process_storyboard",
+                        parameters=process_params,
+                        session_id=session_id,
+                        wait_for_response=True
+                    )
+                    
+                    if not storyboard_response or storyboard_response.header.message_type == MCPMessageType.ERROR:
+                        error_msg = "Failed to process storyboard"
+                        if storyboard_response and isinstance(storyboard_response.body, MCPError):
+                            error_msg = f"{error_msg}: {storyboard_response.body.error_message}"
+                        
+                        self._update_workflow_stage(workflow_id, "storyboard_creation", "failed", error=error_msg)
+                        self._update_workflow_status(workflow_id, "failed", error=error_msg)
+                        return
+                    
+                    # 第三步：为分镜生成图像（可选）
+                    if isinstance(storyboard_response.body, MCPResponse) and storyboard_response.body.success:
+                        storyboard = storyboard_response.body.data.get("storyboard")
+                        
+                        if storyboard:
+                            # 保存分镜到工作流
+                            self.workflows[workflow_id]["assets"]["storyboard"] = storyboard
+                            
+                            # 根据参数决定是否生成图像
+                            if parameters.get("generate_images", True):
+                                # 发送命令给分镜代理生成图像
+                                self.logger.info(f"Sending generate_storyboard_images command to storyboard_agent for workflow {workflow_id}")
+                                
+                                image_params = {
+                                    "storyboard": storyboard,
+                                    "image_source": parameters.get("image_source", "replicate"),
+                                    "image_style": parameters.get("image_style", "realistic")
+                                }
+                                
+                                image_response = await self.send_command(
+                                    target="storyboard_agent",
+                                    action="generate_storyboard_images",
+                                    parameters=image_params,
+                                    session_id=session_id,
+                                    wait_for_response=True
+                                )
+                                
+                                if not image_response or image_response.header.message_type == MCPMessageType.ERROR:
+                                    # 图像生成失败，但不阻止整个工作流
+                                    error_msg = "Failed to generate storyboard images, continuing without images"
+                                    self.logger.warning(error_msg)
+                                else:
+                                    # 更新带有图像的分镜
+                                    if isinstance(image_response.body, MCPResponse) and image_response.body.success:
+                                        updated_storyboard = image_response.body.data.get("storyboard")
+                                        if updated_storyboard:
+                                            self.workflows[workflow_id]["assets"]["storyboard"] = updated_storyboard
+                            
+                            # 更新工作流状态
+                            self._update_workflow_stage(workflow_id, "storyboard_creation", "completed")
+                            
+                            # 继续下一阶段 - 视频生成
+                            asyncio.create_task(self._execute_video_generation_stage(workflow_id, script, parameters, session_id))
+                        else:
+                            self._update_workflow_stage(workflow_id, "storyboard_creation", "failed", error="No storyboard generated")
+                            self._update_workflow_status(workflow_id, "failed", error="No storyboard generated")
+                    else:
+                        self._update_workflow_stage(workflow_id, "storyboard_creation", "failed", error="Invalid response from storyboard agent")
+                        self._update_workflow_status(workflow_id, "failed", error="Invalid response from storyboard agent")
+                else:
+                    self._update_workflow_stage(workflow_id, "storyboard_creation", "failed", error="No storyboard data generated")
+                    self._update_workflow_status(workflow_id, "failed", error="No storyboard data generated")
+            else:
+                self._update_workflow_stage(workflow_id, "storyboard_creation", "failed", error="Invalid response from content agent")
+                self._update_workflow_status(workflow_id, "failed", error="Invalid response from content agent")
+                
+        except Exception as e:
+            error_msg = f"Error in storyboard creation stage: {str(e)}"
+            self.logger.error(error_msg)
+            self._update_workflow_stage(workflow_id, "storyboard_creation", "failed", error=error_msg)
             self._update_workflow_status(workflow_id, "failed", error=error_msg)
     
     async def _execute_video_generation_stage(self, workflow_id: str, script: Dict[str, Any], parameters: Dict[str, Any], session_id: str):

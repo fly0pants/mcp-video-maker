@@ -43,7 +43,7 @@ class VideoCreationRequest(BaseModel):
     voice_character: Optional[str] = Field(None, description="语音角色")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "theme": "上海城市探索",
                 "style": "vlog",

@@ -1,0 +1,155 @@
+{
+  "id": "storyboard_e99da1ba",
+  "script_id": "script_b9936ecf",
+  "title": "人工智能改变生活的5种方式 Storyboard",
+  "style": "storyboard",
+  "frames": [
+    {
+      "id": "frame_325c0f00",
+      "order": 0,
+      "script_section_id": "section_d5389b71",
+      "frame_type": "keyframe",
+      "shot_type": "wide",
+      "description": "分镜1",
+      "visual_description": "场景1：展示一个人使用智能设备，周围环境现代化。",
+      "dialogue": null,
+      "duration": 12.0,
+      "camera_movement": "静态",
+      "composition": "中心构图",
+      "comments": "测试用分镜"
+    },
+    {
+      "id": "frame_924027d2",
+      "order": 1,
+      "script_section_id": "section_55d4c7c5",
+      "frame_type": "establishing",
+      "shot_type": "medium",
+      "description": "分镜2",
+      "visual_description": "场景2：展示一个人使用智能设备，周围环境现代化。",
+      "dialogue": null,
+      "duration": 12.0,
+      "camera_movement": "静态",
+      "composition": "中心构图",
+      "comments": "测试用分镜"
+    },
+    {
+      "id": "frame_39ee0068",
+      "order": 2,
+      "script_section_id": "section_dfee2362",
+      "frame_type": "closeup",
+      "shot_type": "close_up",
+      "description": "分镜3",
+      "visual_description": "场景3：展示一个人使用智能设备，周围环境现代化。",
+      "dialogue": null,
+      "duration": 12.0,
+      "camera_movement": "静态",
+      "composition": "中心构图",
+      "comments": "测试用分镜"
+    },
+    {
+      "id": "frame_6fd47cbb",
+      "order": 3,
+      "script_section_id": "section_c45de605",
+      "frame_type": "action",
+      "shot_type": "aerial",
+      "description": "分镜4",
+      "visual_description": "场景4：展示一个人使用智能设备，周围环境现代化。",
+      "dialogue": null,
+      "duration": 12.0,
+      "camera_movement": "静态",
+      "composition": "中心构图",
+      "comments": "测试用分镜"
+    },
+    {
+      "id": "frame_84ab1e98",
+      "order": 4,
+      "script_section_id": "section_6ec3d622",
+      "frame_type": "transition",
+      "shot_type": "pov",
+      "description": "分镜5",
+      "visual_description": "场景5：展示一个人使用智能设备，周围环境现代化。",
+      "dialogue": null,
+      "duration": 12.0,
+      "camera_movement": "静态",
+      "composition": "中心构图",
+      "comments": "测试用分镜"
+    }
+  ],
+  "transitions": [],
+  "images": [
+    {
+      "id": "img_5589c6e4",
+      "frame_id": "frame_325c0f00",
+      "url": "https://picsum.photos/seed/1/1024/1024",
+      "width": 1024,
+      "height": 1024,
+      "source": "MOCK",
+      "prompt": "场景1：展示一个人使用智能设备，周围环境现代化。",
+      "metadata": {
+        "style": "realistic",
+        "generated_at": "2025-03-11T11:55:13.868687"
+      }
+    },
+    {
+      "id": "img_d36f7b0e",
+      "frame_id": "frame_924027d2",
+      "url": "https://picsum.photos/seed/2/1024/1024",
+      "width": 1024,
+      "height": 1024,
+      "source": "MOCK",
+      "prompt": "场景2：展示一个人使用智能设备，周围环境现代化。",
+      "metadata": {
+        "style": "realistic",
+        "generated_at": "2025-03-11T11:55:13.868734"
+      }
+    },
+    {
+      "id": "img_6910864d",
+      "frame_id": "frame_39ee0068",
+      "url": "https://picsum.photos/seed/3/1024/1024",
+      "width": 1024,
+      "height": 1024,
+      "source": "MOCK",
+      "prompt": "场景3：展示一个人使用智能设备，周围环境现代化。",
+      "metadata": {
+        "style": "realistic",
+        "generated_at": "2025-03-11T11:55:13.868750"
+      }
+    },
+    {
+      "id": "img_dcc0200d",
+      "frame_id": "frame_6fd47cbb",
+      "url": "https://picsum.photos/seed/4/1024/1024",
+      "width": 1024,
+      "height": 1024,
+      "source": "MOCK",
+      "prompt": "场景4：展示一个人使用智能设备，周围环境现代化。",
+      "metadata": {
+        "style": "realistic",
+        "generated_at": "2025-03-11T11:55:13.868768"
+      }
+    },
+    {
+      "id": "img_e6b60baf",
+      "frame_id": "frame_84ab1e98",
+      "url": "https://picsum.photos/seed/5/1024/1024",
+      "width": 1024,
+      "height": 1024,
+      "source": "MOCK",
+      "prompt": "场景5：展示一个人使用智能设备，周围环境现代化。",
+      "metadata": {
+        "style": "realistic",
+        "generated_at": "2025-03-11T11:55:13.868789"
+      }
+    }
+  ],
+  "total_duration": 60.0,
+  "created_at": "2025-03-11T11:55:13.867655",
+  "updated_at": "2025-03-11T11:55:13.868798",
+  "creator_id": "test_user",
+  "status": "draft",
+  "metadata": {
+    "processed_at": "2025-03-11T11:55:13.867664",
+    "images_generated_at": "2025-03-11T11:55:13.868801"
+  }
+}

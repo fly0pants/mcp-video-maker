@@ -1,9 +1,15 @@
 from typing import Dict, Any, List, Optional
 import requests
+import warnings
 from config.config import EDITING_CONFIG, API_KEYS
 
 class VideoEditingAPI:
-    """视频编辑API封装类"""
+    """
+    视频编辑API封装类
+    
+    @deprecated: 此API已被弃用，将在未来版本中移除。
+    MCP agents现在使用其内部API实现。
+    """
     
     def __init__(self, tool_name: str):
         """
@@ -12,6 +18,12 @@ class VideoEditingAPI:
         Args:
             tool_name: 使用的工具名称
         """
+        warnings.warn(
+            "VideoEditingAPI is deprecated and will be removed in a future version. "
+            "MCP agents now use their own internal API implementations.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         self.tool_name = tool_name
         self.config = EDITING_CONFIG.get(tool_name, {})
         self.api_key = API_KEYS.get(f"{tool_name}_edit", "")

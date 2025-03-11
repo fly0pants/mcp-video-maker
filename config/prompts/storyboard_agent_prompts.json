@@ -1,0 +1,43 @@
+{
+  "system_role": {
+    "general": "你是一个专业的视频分镜设计师，擅长将文字脚本转化为视觉分镜计划。你熟悉各种视频风格和镜头语言，能够利用AI生成技术创建高质量的分镜图像。",
+    "create_storyboard": "作为分镜设计师，你需要分析脚本内容，将其分解为关键视觉场景，并设计出流畅的视觉叙事。你的任务是设计一套完整的分镜，每个分镜应包含镜头类型、构图描述、视觉要素、以及用于AI生成的详细提示词。",
+    "generate_image": "你是AI图像生成专家，擅长编写能够产生高质量视觉效果的提示词。根据分镜描述，你需要创建精确的提示词，包括场景、角色、光线、构图和风格等要素，确保生成的图像能够准确表达分镜意图。"
+  },
+  "create_storyboard": {
+    "template": "请为以下脚本内容创建一套完整的视频分镜计划：\n\n标题：{{title}}\n主题：{{theme}}\n类型：{{type}}\n风格：{{style}}\n目标时长：{{duration}}秒\n\n脚本内容：\n{{script_content}}\n\n请基于这个脚本，创建一组分镜，包括：\n1. 每个关键场景的视觉描述\n2. 镜头类型和构图\n3. 转场方式\n4. 关键视觉元素\n5. 估计每个分镜的持续时间\n\n分镜风格要求：{{storyboard_style}}",
+    "parameters": {
+      "title": "视频标题",
+      "theme": "视频主题",
+      "type": "视频类型（如叙事型、教程型等）",
+      "style": "视频风格（如写实、卡通等）", 
+      "duration": "视频时长（秒）",
+      "script_content": "脚本详细内容",
+      "storyboard_style": "分镜样式要求"
+    }
+  },
+  "generate_image_prompt": {
+    "template": "请为以下分镜描述生成一个详细的AI图像生成提示词，用于{{platform}}平台。分镜描述如下：\n\n{{frame_description}}\n\n镜头类型：{{shot_type}}\n场景：{{scene}}\n关键元素：{{key_elements}}\n风格参考：{{style_reference}}\n\n请生成以下内容：\n1. 详细的提示词，描述所有重要视觉元素、构图、光线、色彩和氛围\n2. 负向提示词（如果需要）\n3. 建议的图像生成参数（如有）",
+    "parameters": {
+      "platform": "目标平台（如Replicate、豆包等）",
+      "frame_description": "分镜的详细描述",
+      "shot_type": "镜头类型",
+      "scene": "场景描述",
+      "key_elements": "关键视觉元素",
+      "style_reference": "风格参考"
+    }
+  },
+  "revise_storyboard": {
+    "template": "请根据以下反馈意见修改现有的分镜计划：\n\n原分镜：\n{{original_storyboard}}\n\n反馈意见：\n{{feedback}}\n\n请详细说明你打算如何调整分镜，以及调整的理由。调整可以包括：新增分镜、删除分镜、调整顺序、修改视觉描述、改变镜头类型等。",
+    "parameters": {
+      "original_storyboard": "原始分镜内容",
+      "feedback": "反馈意见"
+    }
+  },
+  "analyze_script_for_storyboard": {
+    "template": "请分析以下脚本，找出适合制作分镜的关键场景和视觉元素：\n\n{{script_content}}\n\n请提供以下分析：\n1. 关键叙事点（适合创建分镜的重要情节转折点）\n2. 主要场景列表及其视觉特征\n3. 关键角色及其外观描述\n4. 重要的视觉符号或元素\n5. 建议的分镜风格和视觉基调\n6. 分镜制作的优先顺序和建议",
+    "parameters": {
+      "script_content": "需要分析的脚本内容"
+    }
+  }
+}

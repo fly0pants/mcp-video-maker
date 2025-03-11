@@ -1,0 +1,81 @@
+{
+  "raw_content": "# 分镜测试\n\n这是测试用的分镜内容。",
+  "style": "storyboard",
+  "frames": [
+    {
+      "id": "frame_319092f0",
+      "order": 0,
+      "script_section_id": "section_824a7ec1",
+      "frame_type": "SCENE",
+      "shot_type": "MEDIUM",
+      "description": "分镜1",
+      "visual_description": "场景1：展示一个人使用智能设备，周围环境现代化。",
+      "dialogue": null,
+      "duration": 12.0,
+      "camera_movement": "静态",
+      "composition": "中心构图",
+      "comments": "测试用分镜"
+    },
+    {
+      "id": "frame_6a12f353",
+      "order": 1,
+      "script_section_id": "section_dd0d1bda",
+      "frame_type": "SCENE",
+      "shot_type": "MEDIUM",
+      "description": "分镜2",
+      "visual_description": "场景2：展示一个人使用智能设备，周围环境现代化。",
+      "dialogue": null,
+      "duration": 12.0,
+      "camera_movement": "静态",
+      "composition": "中心构图",
+      "comments": "测试用分镜"
+    },
+    {
+      "id": "frame_76bedb91",
+      "order": 2,
+      "script_section_id": "section_63e8f294",
+      "frame_type": "SCENE",
+      "shot_type": "MEDIUM",
+      "description": "分镜3",
+      "visual_description": "场景3：展示一个人使用智能设备，周围环境现代化。",
+      "dialogue": null,
+      "duration": 12.0,
+      "camera_movement": "静态",
+      "composition": "中心构图",
+      "comments": "测试用分镜"
+    },
+    {
+      "id": "frame_5ffa6534",
+      "order": 3,
+      "script_section_id": "section_3ab0774f",
+      "frame_type": "SCENE",
+      "shot_type": "MEDIUM",
+      "description": "分镜4",
+      "visual_description": "场景4：展示一个人使用智能设备，周围环境现代化。",
+      "dialogue": null,
+      "duration": 12.0,
+      "camera_movement": "静态",
+      "composition": "中心构图",
+      "comments": "测试用分镜"
+    },
+    {
+      "id": "frame_62d4fa9a",
+      "order": 4,
+      "script_section_id": "section_ceecd0cf",
+      "frame_type": "SCENE",
+      "shot_type": "MEDIUM",
+      "description": "分镜5",
+      "visual_description": "场景5：展示一个人使用智能设备，周围环境现代化。",
+      "dialogue": null,
+      "duration": 12.0,
+      "camera_movement": "静态",
+      "composition": "中心构图",
+      "comments": "测试用分镜"
+    }
+  ],
+  "metadata": {
+    "generated_at": "2025-03-11T11:53:30.647441",
+    "model": "test_mock",
+    "is_test": true
+  }
+}

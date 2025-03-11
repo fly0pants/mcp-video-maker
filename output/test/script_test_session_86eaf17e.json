@@ -1,0 +1,88 @@
+{
+  "id": "script_6ebfb01c",
+  "title": "人工智能改变生活的5种方式",
+  "theme": "科技",
+  "type": "narrative",
+  "target_audience": [
+    "年轻人",
+    "科技爱好者"
+  ],
+  "sections": [
+    {
+      "id": "section_58267a4a",
+      "order": 0,
+      "content": "这是第1个场景的内容。介绍AI在日常生活中的应用场景。",
+      "visual_description": "场景1：展示一个人使用智能设备，周围环境现代化。",
+      "audio_description": "背景音乐轻快，narrator讲述AI如何改变生活。",
+      "duration": 12.0,
+      "tags": [
+        "AI",
+        "科技",
+        "日常生活"
+      ]
+    },
+    {
+      "id": "section_68899a87",
+      "order": 1,
+      "content": "这是第2个场景的内容。介绍AI在日常生活中的应用场景。",
+      "visual_description": "场景2：展示一个人使用智能设备，周围环境现代化。",
+      "audio_description": "背景音乐轻快，narrator讲述AI如何改变生活。",
+      "duration": 12.0,
+      "tags": [
+        "AI",
+        "科技",
+        "日常生活"
+      ]
+    },
+    {
+      "id": "section_72e5c954",
+      "order": 2,
+      "content": "这是第3个场景的内容。介绍AI在日常生活中的应用场景。",
+      "visual_description": "场景3：展示一个人使用智能设备，周围环境现代化。",
+      "audio_description": "背景音乐轻快，narrator讲述AI如何改变生活。",
+      "duration": 12.0,
+      "tags": [
+        "AI",
+        "科技",
+        "日常生活"
+      ]
+    },
+    {
+      "id": "section_635f3e3d",
+      "order": 3,
+      "content": "这是第4个场景的内容。介绍AI在日常生活中的应用场景。",
+      "visual_description": "场景4：展示一个人使用智能设备，周围环境现代化。",
+      "audio_description": "背景音乐轻快，narrator讲述AI如何改变生活。",
+      "duration": 12.0,
+      "tags": [
+        "AI",
+        "科技",
+        "日常生活"
+      ]
+    },
+    {
+      "id": "section_92b40377",
+      "order": 4,
+      "content": "这是第5个场景的内容。介绍AI在日常生活中的应用场景。",
+      "visual_description": "场景5：展示一个人使用智能设备，周围环境现代化。",
+      "audio_description": "背景音乐轻快，narrator讲述AI如何改变生活。",
+      "duration": 12.0,
+      "tags": [
+        "AI",
+        "科技",
+        "日常生活"
+      ]
+    }
+  ],
+  "total_duration": 60.0,
+  "creator_id": "test_user",
+  "version": 1,
+  "keywords": [
+    "AI",
+    "智能家居",
+    "自动化"
+  ],
+  "metadata": {
+    "created_for_test": true
+  }
+}
