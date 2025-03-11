@@ -1,0 +1,103 @@
+{
+  "system_prompts": {
+    "description": "Claude系统提示指南",
+    "content": {
+      "principles": [
+        "清晰、精确、简洁：指令应该易于理解，避免歧义",
+        "直接使用命令式语言：'分析这个文档'，而不是'能否分析这个文档？'",
+        "一次给出一个明确任务，而不是多个混合任务",
+        "明确指定输出格式（JSON、表格、项目符号等）",
+        "在有多步骤任务时，将其拆分成清晰的步骤",
+        "提供相关上下文和示例"
+      ],
+      "template": {
+        "intro": "你是一个{{role}}，专长于{{domain}}。",
+        "task": "你的任务是{{task_description}}，重点关注{{focus_areas}}。",
+        "constraints": "在执行这项任务时，请遵循以下约束：{{constraints}}。",
+        "output_format": "请以{{format}}形式提供你的回答。",
+        "example": "以下是一个示例：{{example}}"
+      }
+    }
+  },
+  "visual_generation": {
+    "description": "图像生成提示指南",
+    "content": {
+      "principles": [
+        "明确描述希望生成的视觉内容",
+        "使用具体的视觉描述词汇",
+        "指定风格和参考（例如电影风格、艺术家风格）",
+        "提供构图细节（前景、背景、光照等）",
+        "精确描述希望的色彩和情感基调",
+        "避免过于抽象或意义不明确的描述"
+      ],
+      "template": {
+        "subject": "{{subject_description}}",
+        "style": "风格：{{style_description}}",
+        "composition": "构图：{{composition_details}}",
+        "lighting": "光照：{{lighting_description}}",
+        "colors": "色彩：{{color_palette}}",
+        "mood": "情感基调：{{mood_description}}",
+        "details": "特殊细节：{{special_details}}"
+      }
+    }
+  },
+  "content_creation": {
+    "description": "内容创作提示指南",
+    "content": {
+      "principles": [
+        "明确内容的目标受众和用途",
+        "指定内容的语气、风格和长度",
+        "提供内容应包含的关键点或信息",
+        "明确指出应避免的内容或方向",
+        "提供相关的参考材料或示例",
+        "指定内容的结构和格式要求"
+      ],
+      "template": {
+        "audience": "目标受众：{{audience_description}}",
+        "purpose": "内容目的：{{content_purpose}}",
+        "tone": "语气风格：{{tone_description}}",
+        "length": "内容长度：{{length_specification}}",
+        "key_points": "关键信息：{{key_points}}",
+        "avoid": "应避免：{{things_to_avoid}}",
+        "structure": "内容结构：{{structure_format}}",
+        "examples": "参考示例：{{reference_examples}}"
+      }
+    }
+  },
+  "few_shot_examples": {
+    "description": "少样本学习提示指南",
+    "content": {
+      "principles": [
+        "提供3-5个明确的示例，展示期望的输入输出模式",
+        "确保示例覆盖各种情况和边缘情况",
+        "使示例在格式和复杂度上保持一致",
+        "示例后明确标明需要处理的新输入",
+        "可以先解释示例的模式，再展示示例"
+      ],
+      "template": {
+        "explanation": "我将向你展示几个{{task_name}}的例子，然后让你完成一个新的任务。",
+        "example_format": "示例{{number}}:\n输入: {{input_example}}\n输出: {{output_example}}",
+        "new_task": "现在，请处理以下新输入:\n{{new_input}}"
+      }
+    }
+  },
+  "advanced_reasoning": {
+    "description": "高级推理任务提示指南",
+    "content": {
+      "principles": [
+        "明确指示一步一步地思考问题",
+        "要求在给出最终结论前展示推理过程",
+        "引导模型考虑多种可能性和观点",
+        "要求评估不同结论的证据和可能性",
+        "鼓励模型识别和说明假设或不确定性",
+        "对于复杂问题，使用链式推理方法"
+      ],
+      "template": {
+        "problem": "问题：{{problem_description}}",
+        "approach": "请采用以下方法解决这个问题：\n1. 理解问题的核心要素\n2. 考虑可能的解决方向\n3. 分析每种方向的优缺点\n4. 提出最佳解决方案\n5. 解释你的推理过程",
+        "considerations": "在思考过程中，请考虑以下因素：{{factors_to_consider}}",
+        "output": "请首先展示你的推理过程，然后再给出最终结论。"
+      }
+    }
+  }
+}

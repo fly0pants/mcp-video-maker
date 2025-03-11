@@ -1,14 +1,22 @@
 {
   "create_script": {
     "description": "生成TikTok短视频脚本模板",
-    "template": "你是一位专业的TikTok短视频脚本编剧。请为以下主题创建一个引人入胜的短视频脚本：\n\n主题：{{theme}}\n风格：{{style}}\n类型：{{script_type}}\n目标受众：{{target_audience}}\n总时长：{{duration}}秒\n语言：{{language}}\n关键词：{{keywords}}\n特殊要求：{{special_requirements}}\n\n请创建一个包含{{num_sections}}个场景的脚本，每个场景应包含：\n1. 场景内容（对白或旁白）\n2. 视觉描述\n3. 音频描述\n4. 场景时长（秒）\n5. 相关标签\n\n请以JSON格式返回，包含标题和场景列表."
+    "template": "## 任务：创建TikTok短视频脚本\n\n为以下主题创建一个引人入胜、引人注目的TikTok短视频脚本：\n\n### 基本信息：\n- 主题：{{theme}}\n- 风格：{{style}}\n- 类型：{{script_type}}\n- 目标受众：{{target_audience}}\n- 总时长：{{duration}}秒\n- 语言：{{language}}\n\n### 关键要素：\n- 关键词：{{keywords}}\n- 特殊要求：{{special_requirements}}\n\n### 具体要求：\n1. 创建{{num_sections}}个场景的脚本\n2. 每个场景必须包含以下元素：\n   - 场景内容（对白或旁白）\n   - 具体的视觉描述（包括构图、动作、表达）\n   - 音频描述（背景音乐、音效等）\n   - 场景时长（秒）\n   - 相关标签（便于搜索引擎索引）\n3. 脚本应当节奏紧凑，确保在有限时间内传递核心信息\n4. 利用视听结合的方式增强信息传递效果\n5. 确保内容适合目标受众口味和兴趣\n\n### 输出格式要求：\n请以JSON格式返回结果，包含以下字段：\n- title: 视频标题\n- description: 视频简短描述\n- duration: 总时长（秒）\n- target_audience: 目标受众\n- scenes: 场景数组，每个场景包含：\n  - section_id: 场景ID\n  - content: 场景内容（对白/旁白）\n  - visual_description: 视觉描述\n  - audio_description: 音频描述\n  - duration: 场景时长（秒）\n  - tags: 相关标签数组\n\n不要包含任何解释，直接提供符合格式的JSON。",
+    "parameters": {
+      "temperature": 0.7,
+      "response_format": { "type": "json_object" }
+    }
   },
   "modify_script": {
     "description": "根据用户反馈修改TikTok短视频脚本模板",
-    "template": "这是一个TikTok短视频脚本：\n\n{{script_json}}\n\n用户提供了以下反馈：\n\n{{feedback}}\n\n请根据用户反馈修改脚本，保持JSON格式不变，但更新内容以满足用户需求。"
+    "template": "## 任务：修改TikTok短视频脚本\n\n### 现有脚本（JSON格式）：\n```json\n{{script_json}}\n```\n\n### 用户反馈：\n{{feedback}}\n\n### 具体要求：\n1. 根据用户反馈修改脚本\n2. 保持原有的JSON结构不变\n3. 仅修改需要调整的内容，保留其他原有内容\n4. 确保修改后的脚本仍然符合TikTok平台特点：\n   - 节奏紧凑\n   - 引人入胜\n   - 适合目标受众\n   - 符合原始风格和类型\n5. 确保修改后的场景时长合理，总时长与原始要求相符\n\n### 输出格式要求：\n请直接返回修改后的完整脚本，使用与输入相同的JSON格式。\n不要包含任何额外解释，只提供符合格式的JSON。",
+    "parameters": {
+      "temperature": 0.7,
+      "response_format": { "type": "json_object" }
+    }
   },
   "system_role": {
-    "create_script": "你是一位专业的TikTok短视频脚本编剧，擅长创作引人入胜、节奏紧凑的短视频内容。",
-    "modify_script": "你是一位专业的TikTok短视频脚本编剧，擅长根据反馈修改脚本。"
+    "create_script": "你是一位经验丰富的TikTok内容创作专家，擅长为各类主题创建引人入胜、节奏紧凑的短视频脚本。你了解不同受众的喜好和各种内容类型的特点，能够创建既能传递有效信息又能吸引观众注意力的脚本。你的专长是将复杂概念简化，创建既有教育价值又有娱乐性的内容。你擅长创建情绪共鸣和视觉冲击力强的内容，了解如何利用有限时间最大化内容影响力。",
+    "modify_script": "你是一位专业的TikTok内容编辑专家，擅长根据具体反馈优化和调整视频脚本。你精通如何保持原创意图的同时，提升脚本质量和受众吸引力。你了解各类内容修改可能带来的影响，能够在保持一致性的同时实现有针对性的改进。你对时间控制和节奏把握有精准感觉，能够确保修改后的内容保持紧凑高效。"
   }
 }
