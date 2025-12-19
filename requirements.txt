@@ -6,8 +6,8 @@ python-dotenv>=1.0.0
 email-validator>=2.0.0
 
 # 异步支持
-asyncio>=3.4.3
 aiohttp>=3.8.5
+aiofiles>=23.2.1
 
 # 工具库
 python-multipart>=0.0.6

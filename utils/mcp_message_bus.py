@@ -467,7 +467,7 @@ class MCPMessageBus:
         
         self.logger.info("心跳监控任务结束")
 
-    def _cleanup_expired_messages(self):
+    async def _cleanup_expired_messages(self):
         """清理过期的消息"""
         self.logger.info("消息清理任务启动")
         
@@ -477,6 +477,7 @@ class MCPMessageBus:
                 now = datetime.now()
                 
                 # 清理过期的消息
+                expired_count = 0
                 for message in list(self._message_history):
                     # 如果消息有TTL
                     if message.header.ttl:
@@ -486,13 +487,20 @@ class MCPMessageBus:
                         # 如果消息已过期，从历史记录中移除
                         if now > expiry_time:
                             self._message_history.remove(message)
+                            expired_count += 1
                 
-                # 等待一段时间再清理
-                time.sleep(60)  # 每分钟清理一次
+                if expired_count > 0:
+                    self.logger.debug(f"清理了 {expired_count} 条过期消息")
                 
+                # 等待一段时间再清理（使用异步sleep）
+                await asyncio.sleep(60)  # 每分钟清理一次
+                
+            except asyncio.CancelledError:
+                self.logger.info("消息清理任务被取消")
+                break
             except Exception as e:
                 self.logger.error(f"清理过期消息时发生错误: {str(e)}", exc_info=True)
-                time.sleep(60)
+                await asyncio.sleep(60)
         
         self.logger.info("消息清理任务结束")
 
